@@ -133,6 +133,8 @@ mean(dati1lev$Slope)
 
 
 #effect for Days
+#devtools::install_github("livioivil/flipscores")
+
 library(flipscores)
 (res=flipscores(Slope~1,data=dati1lev,score_type="standardized"))
 summary(res)
