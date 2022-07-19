@@ -32,6 +32,9 @@ dati=read.csv(file = "oasis_longitudinal.csv")
 str(dati)
 
 dati$Group=factor(dati$Group,levels=c("Nondemented","Converted","Demented"))
+
+# da qui 0 è pari a Age=77
+dati$Age=dati$Age-77
 ```
 
 ```{r}
@@ -39,7 +42,7 @@ library(ggplot2)
 p <- ggplot(dati,aes(Group,nWBV,color=Group))
 p+geom_point(size = 3) +geom_boxplot(alpha=.1)
 
-p <- ggplot(dati,aes(MR.Delay,nWBV,color=Group))
+p <- ggplot(dati,aes(Age,nWBV,color=Group))
 p+geom_point(size = 3) +geom_smooth(method = lm)
 
 
@@ -49,34 +52,41 @@ p+geom_point(size = 3) +geom_smooth(method = lm)
 library(lmerTest)
 library(ggplot2)
 
-p=ggplot(dati, aes(x = MR.Delay, y = nWBV, colour = Group, group = Subject.ID)) + geom_line() + geom_point()
+p=ggplot(dati, aes(x = Age, y = nWBV, colour = Group, group = Subject.ID)) + geom_line() + geom_point()
 p
 
-mod=lmer(nWBV ~ MR.Delay*Group+(1+MR.Delay|Subject.ID),data=dati)
+mod=lmer(nWBV ~ Group+Age+(1+Age|Subject.ID),data=dati)
+summary(mod)
+anova(mod)
+
+
+mod=lmer(nWBV ~ Age*Group+(1+Age|Subject.ID),data=dati)
 summary(mod)
 anova(mod)
 
 
 ```
 
-```{r}
-library(tidyverse)
-dati <- group_by(dati, Subject.ID) %>% mutate(nWBV0 = nWBV-nWBV[1])
+<!-- ```{r} -->
+<!-- library(tidyverse) -->
+<!-- dati <- group_by(dati, Subject.ID) %>% mutate(nWBV0 = nWBV-nWBV[1]) -->
 
 
-library(ggplot2)
-p=ggplot(dati, aes(x = MR.Delay, y = nWBV0, colour = Group, group = Subject.ID)) + geom_line() + geom_point()
-p
+<!-- library(ggplot2) -->
+<!-- p=ggplot(dati, aes(x = Age, y = nWBV0, colour = Group, group = Subject.ID)) + geom_line() + geom_point() -->
+<!-- p -->
 
-```
+<!-- ``` -->
 
 # Un approccio alternativo (non parametrico)
 
 ```{r}
+library(tidyverse)
 dati1lev=dati %>%
   group_by(Subject.ID) %>%
-  summarize(estim=(coefficients(lm(nWBV ~ MR.Delay))))
+  summarize(estim=(coefficients(lm(nWBV ~ Age))))
 dati1lev$coeff=(rep(c("Interc","Slope"),150))
+
 
 temp=dati %>%
   group_by(Subject.ID) %>%
@@ -115,12 +125,12 @@ anova(res)
 
 # Commenti
 
-Il modello testato: `MR.Delay*Group+(1|Subject.ID)` ammette solo intercetta casuale, mentre il coefficiente angolare (cioè l'evoluzione nel tempo) è uguale per tutti i soggetti (dello stesso Group vista l'interazione imposta nella formula). E' una assunzione ragionevole?
+Il modello testato: `Age*Group+(1|Subject.ID)` ammette solo intercetta casuale, mentre il coefficiente angolare (cioè l'evoluzione nel tempo) è uguale per tutti i soggetti (dello stesso Group vista l'interazione imposta nella formula). E' una assunzione ragionevole?
 
-Potremmo quindi voler testare un modello più flessibile, con coefficiente angolare specifico per ogni soggetto: `MR.Delay*Group+(1+MR.Delay|Subject.ID)`
+Potremmo quindi voler testare un modello più flessibile, con coefficiente angolare specifico per ogni soggetto: `Age*Group+(1+Age|Subject.ID)`
 
 ```{r}
-mod=lmer(nWBV ~ MR.Delay*Group+(1+MR.Delay|Subject.ID),data=dati)
+mod=lmer(nWBV ~ Age*Group+(1+Age|Subject.ID),data=dati)
 summary(mod)
 #anova(mod)
 ```
@@ -129,8 +139,8 @@ Attenzione!!! `optimizer (nloptwrap) convergence code: 0 (OK) boundary (singular
 
 L'approcio di permutazione è non parametrico, assume l'effetto casuale anche per il coefficiente angolare dei soggetti e ci garantisce migliori proprietà inferenziali.
 
-# Profiles Clustering
+<!-- # Profiles Clustering -->
 
-```{r}
-plot(dati1lev$Interc,dati1lev$Slope,col=dati1lev$Group)
-```
+<!-- ```{r} -->
+<!-- plot(dati1lev$Interc,dati1lev$Slope,col=dati1lev$Group) -->
+<!-- ``` -->
