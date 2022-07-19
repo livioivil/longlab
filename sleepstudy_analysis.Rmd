@@ -1,0 +1,214 @@
+---
+title: "Sleep and Reaction"
+author: "Livio Finos"
+date: '2022-07-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import data
+
+```{r}
+data("sleepstudy", package="lme4")
+summary(sleepstudy)
+library(lmerTest)
+```
+
+# First analysis (wrong)
+
+```{r}
+library(ggplot2)
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction)) + geom_point()
+
+p
+
+p+geom_smooth(method=lm)
+
+mod <- lm(Reaction ~ Days, sleepstudy)
+summary(mod) 
+
+```
+
+# Second analysis: Repeated measures ANOVA
+
+```{r}
+# The standard way
+mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
+summary(mod)
+```
+
+
+A better output and slightly more compleate analysis (Sphericity Corrections):
+
+```{r}
+library(ez)
+mod=ezANOVA(dv=Reaction, wid=Subject, within=.(Days),data=sleepstudy,type=3)
+print(mod)
+```
+
+
+## Sphericity
+
+Sphericity is an assumption about the structure of the covariance matrix in a repeated measures design. Before we describe it, let's consider a simpler (but more strict) condition.
+
+**Compound symmetry**
+
+Compound symmetry holds true
+when the variances within conditions are equal (this is the same as the homogeneity of variance
+assumption in between-group designs) but also when the covariances between pairs of conditions
+are roughly equal. As such, we assume that the variation within experimental conditions is fairly
+similar and that no two conditions are any more dependent than any other two.
+
+Provided the observed covariances are roughly equal in our samples (and the variances are OK too) we can be pretty confident that compound symmetry is not violated.
+
+compound symmetry is met when the correlation between `Condition f` and `Condition h` is equal to the correlation between `Condition f` and `Condition o` or `Condition h` and `Condition n`, etc (same for any other factor within subject, such as `Chan`). But a more direct way to think about compound symmetry is to say that it requires that all subjects in each group change in the same way over trials. In other words the slopes of the lines regressing the dependent variable on time are the same for all subjects. 
+Put that way it is easy to see that compound symmetry can really be an unrealistic assumption. 
+
+
+**Sphericity**  
+
+Although
+compound symmetry has been shown to be a sufficient condition for conducting ANOVA on
+repeated measures data, it is not a necessary condition. Sphericity is a less restrictive form of
+compound symmetry. Sphericity refers to the equality of variances of the differences between
+treatment levels. If you were to take each pair of treatment levels, and calculate the differences
+between each pair of scores it is necessary that these differences have equal variances.
+
+
+We can check sphericity assumption using the covariance matrix, but it turns out to be fairly laborious. Remember that  variance of differences can be computed as:
+$$Var(x-y)=S^2_{x-y} = S^2_x +S^2_y - 2S_{xy}$$
+
+
+Further reading:
+<https://en.wikipedia.org/wiki/Mauchly%27s_sphericity_test>
+
+<!-- and a Video:   -->
+<!-- Part 1: <https://www.youtube.com/watch?v=8BvlRJeCIaM>   -->
+<!-- Part 2: <https://www.youtube.com/watch?v=bUXdWUHJRqA> -->
+<!-- vedi anche:  https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwiQ4b-TtrPvAhWJO-wKHZ2rB4wQFjABegQIAhAD&url=http%3A%2F%2Foak.ucc.nau.edu%2Frh232%2Fcourses%2FEPS625%2FHandouts%2FRM-ANOVA%2FSphericity.pdf&usg=AOvVaw2AjUDNrV5Yn7zbplgBWLYq -->
+This is often an unrealistic assumption in EEG data (spatial location of channel relates to correlation between measures)
+
+### (Further) Limitations of Repeated Measures ANOVA
+
+- (Design and) Data must be balanced
+- Repeated Measures Anova doesn't allow for missing data
+- It only handle factors, no quantitative variables
+
+Mixed model is a more flexible approach.
+
+# Third Analysis: Mixed model
+
+```{r}
+library(ggplot2)
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
+p
+
+
+library(lmerTest)
+mod <- lmer(Reaction ~ 1+Days + (1 + Days| Subject), data=sleepstudy)
+summary(mod) 
+
+```
+
+**Attenzione**:  
+- i mixed model non risolvono tutti i problemi, ad esempio se non imponiamo anche il coefficiente angolare casuale (random slope) implicitamente facciamo le stesse assunzioni di sfericità delle misure ripetute...
+- Riguardo alle rette stimate con i mixed model: sono simili ma non identiche a quelle che otteniamo se stimiamo una retta per ogni soggetto; nei mixed model imponiamo che i coefficienti provengano dalla stessa popolazione (distribuita normalmente) e questo distorce (un po') le stime
+
+
+# Fourth analysis (non parametric)
+
+```{r}
+library(tidyverse)
+dati1lev=sleepstudy %>%
+  group_by(Subject) %>%
+  summarize(estim=(coefficients(lm(Reaction ~ Days))))
+dati1lev$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
+
+library(tidyr)
+dati1lev=spread(dati1lev, key = coeff, value = estim)
+
+head(dati1lev)
+mean(dati1lev$Slope)
+
+library(flipscores)
+
+#main within effect
+res=flipscores(Interc~1,data=dati1lev,score_type="standardized")
+summary(res)
+
+#main between effect
+(res=flipscores(Slope~1,data=dati1lev,score_type="standardized"))
+summary(res)
+
+```
+
+
+
+# Workin with permutations
+
+```{r}
+library(ggplot2)
+perm=sleepstudy
+
+rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+
+p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
+p + ggtitle("A random permutation")
+
+dati1levperm=perm %>%
+  group_by(Subject) %>%
+  summarize(estim=(coefficients(lm(Reaction ~ Days))))
+dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
+dati1levperm=spread(dati1levperm, key = coeff, value = estim)
+
+head(dati1levperm)
+mean(dati1levperm$Slope)
+
+rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+
+p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
+p + ggtitle("Another random permutation")
+
+dati1levperm=perm %>%
+  group_by(Subject) %>%
+  summarize(estim=(coefficients(lm(Reaction ~ Days))))
+dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
+dati1levperm=spread(dati1levperm, key = coeff, value = estim)
+
+head(dati1levperm)
+mean(dati1levperm$Slope)
+
+
+Slopes_flips=replicate(100,{
+  rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+  dati1levperm=perm %>%
+  group_by(Subject) %>%
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
+mean(dati1levperm$Slope)
+})
+
+hist(Slopes_flips)
+
+```
+
