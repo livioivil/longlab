@@ -124,22 +124,16 @@ summary(mod)
 library(tidyverse)
 dati1lev=sleepstudy %>%
   group_by(Subject) %>%
-  summarize(estim=(coefficients(lm(Reaction ~ Days))))
-dati1lev$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
-
-library(tidyr)
-dati1lev=spread(dati1lev, key = coeff, value = estim)
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
 
 head(dati1lev)
 mean(dati1lev$Slope)
 
+
+
+
+#effect for Days
 library(flipscores)
-
-#main within effect
-res=flipscores(Interc~1,data=dati1lev,score_type="standardized")
-summary(res)
-
-#main between effect
 (res=flipscores(Slope~1,data=dati1lev,score_type="standardized"))
 summary(res)
 
