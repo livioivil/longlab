@@ -1,0 +1,94 @@
+---
+title: "AdoLong"
+author: "Livio Finos"
+date: '2022-07-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import
+
+Dataset:
+
+Talking about the Birth Family since the Beginning: The Communicative Openness in the New Adoptive Family
+Santona, A., Tognasso, G., Miscioscia, C.L., Russo, D., Gorla, L.
+International Journal of Environmental Research and Public Healththis link is disabled, 2022, 19(3), 1203
+
+
+```{r}
+#library(haven)
+library(tidyr)
+library(lmerTest)
+library(effects)
+library(sjPlot)
+library(ggplot2)
+theme_set(theme_sjplot())
+
+load(file="adolong.Rdata")
+
+
+
+dataplot <- aggregate(x = adolong$SALUTE, 
+                               by = list(Time=adolong$TIME,Country=adolong$PROV_BAMB), 
+                               FUN = function(x){
+                                 # print(x);
+                                 # browser();
+                                x=as.numeric(as.character(x));
+ res=c(prop=mean(x),sd=sd(x),n=length(x))})
+  
+  dataplot=cbind(dataplot[,1:2],dataplot$x)
+  dataplot$upper=dataplot$prop+dataplot$sd/sqrt(dataplot$n)
+  dataplot$lower=dataplot$prop-dataplot$sd/sqrt(dataplot$n)
+    require(ggplot2)
+  pd <- position_dodge(width = 2)
+  GP=ggplot(data=dataplot, aes(x=Time, y=prop, group=Country,colour=Country)) + 
+    geom_line( size=1.5)+geom_errorbar(data=dataplot, mapping=aes(x=Time, ymin=upper, ymax=lower), position=pd, width=0.2, size=1, color="grey",alpha=.5)
+  print(GP)  
+  
+  ###################
+  dataplot <- aggregate(x = adolong$COMP_ESTERN, 
+                               by = list(Time=adolong$TIME,Country=adolong$PROV_BAMB), 
+                               FUN = function(x){
+                                 # print(x);
+                                 # browser();
+                                x=as.numeric(as.character(x));
+ res=c(prop=mean(x),sd=sd(x),n=length(x))})
+  
+  dataplot=cbind(dataplot[,1:2],dataplot$x)
+  dataplot$upper=dataplot$prop+dataplot$sd/sqrt(dataplot$n)
+  dataplot$lower=dataplot$prop-dataplot$sd/sqrt(dataplot$n)
+    require(ggplot2)
+  pd <- position_dodge(width = 2)
+  GP=ggplot(data=dataplot, aes(x=Time, y=prop, group=Country,colour=Country)) + 
+    geom_line( size=1.5)+geom_errorbar(data=dataplot, mapping=aes(x=Time, ymin=upper, ymax=lower), position=pd, width=0.2, size=1, color="grey",alpha=.5)
+  print(GP)  
+  
+
+#######################################
+
+
+library(lmerTest)
+
+mod=glmer(SALUTE~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1+TIME|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
+
+summary(mod)  
+car::Anova(mod)
+print(plot_model(mod, type = "pred", terms = c("ETA_B_ARRIVO")))
+print(plot_model(mod, type = "pred", terms = c(("TIME"), ("GENERE"))))
+print(plot_model(mod, type = "pred", terms = c("PROV_BAMB")))
+
+##########
+
+mod=glmer(COMP_ESTERN~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
+
+summary(mod)  
+car::Anova(mod)
+print(plot_model(mod, type = "pred", terms = c("ETA_B_ARRIVO")))
+print(plot_model(mod, type = "pred", terms = c(("TIME"), ("GENERE"))))
+print(plot_model(mod, type = "pred", terms = c("PROV_BAMB")))
+
+```
+
