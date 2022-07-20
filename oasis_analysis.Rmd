@@ -1,7 +1,7 @@
 ---
 title: "MRI_ALZ"
 author: "Livio Finos"
-date: '2022-07-10'
+date: '2022-07-20'
 output: html_document
 ---
 
@@ -29,7 +29,6 @@ When publishing findings that benefit from OASIS data, please include the follow
 
 ```{r}
 dati=read.csv(file = "oasis_longitudinal.csv")
-str(dati)
 
 dati$Group=factor(dati$Group,levels=c("Nondemented","Converted","Demented"))
 
@@ -139,8 +138,55 @@ Attenzione!!! `optimizer (nloptwrap) convergence code: 0 (OK) boundary (singular
 
 L'approcio di permutazione è non parametrico, assume l'effetto casuale anche per il coefficiente angolare dei soggetti e ci garantisce migliori proprietà inferenziali.
 
-<!-- # Profiles Clustering -->
+# Profiles Clustering
 
-<!-- ```{r} -->
-<!-- plot(dati1lev$Interc,dati1lev$Slope,col=dati1lev$Group) -->
-<!-- ``` -->
+```{r}
+plot(dati1lev$Interc,dati1lev$Slope)
+
+D=dist(dati1lev[,c("Interc","Slope")])
+hc=hclust(D,method = "complete")
+plot(hc)
+
+clst=cutree(hc,2)
+dati1lev$Cluster=clst
+plot(dati1lev$Interc,dati1lev$Slope,col=dati1lev$Cluster)
+
+
+dati1lev$Interc=scale(dati1lev$Interc)
+dati1lev$Slope=scale(dati1lev$Slope)
+D=dist(dati1lev[,c("Interc","Slope")])
+hc=hclust(D,method = "complete")
+plot(hc)
+
+clst=cutree(hc,3)
+dati1lev$Cluster=clst
+plot(dati1lev$Interc,dati1lev$Slope,col=dati1lev$Cluster)
+
+tab=table(dati1lev$Cluster,dati1lev$Group)
+tab=tab[-3,]
+chisq.test(tab)
+
+
+library(tidyr)
+
+temp=dati %>%
+  group_by(Subject.ID) %>%
+  summarize(Age=Age[1])
+dati1lev=left_join(dati1lev,temp)
+
+temp=dati %>%
+  group_by(Subject.ID) %>%
+  summarize(EDUC=EDUC[1])
+dati1lev=left_join(dati1lev,temp)
+
+
+dati1lev$Cluster=factor(dati1lev$Cluster)
+p <- ggplot(dati1lev,aes(Cluster,Age,color=Cluster))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+
+p <- ggplot(dati1lev,aes(Cluster,EDUC,color=Cluster))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+dati1lev$EDUC[dati1lev$Cluster==2]
+```
