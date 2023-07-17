@@ -2,7 +2,9 @@
 title: "Sleep and Reaction"
 author: "Livio Finos"
 date: '2022-07-10'
-output: html_document
+output: 
+  html_document: 
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -33,6 +35,8 @@ summary(mod)
 ```
 
 # Second analysis: Repeated measures ANOVA
+
+
 
 ```{r}
 # The standard way
@@ -134,6 +138,39 @@ mean(dati1lev$Slope)
 
 ```
 
+## Detour
+
+Let's work on Time 0 and 1 only, one can perform paired t-test
+```{r}
+sleepstudy2=sleepstudy[sleepstudy$Days<=1,]
+
+t.test(sleepstudy2$Reaction[sleepstudy2$Days==1]-sleepstudy2$Reaction[sleepstudy2$Days==0])
+```
+
+or linear model:
+```{r}
+sleepstudy2$Subject=factor(sleepstudy2$Subject)
+mod <- lm(Reaction ~ Days+ Subject, sleepstudy2)
+summary(mod) 
+
+```
+or Repeated Measures:
+
+```{r}
+mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
+summary(mod)
+```
+
+or Mixed model:
+```{r}
+
+library(lmerTest)
+mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy2)
+summary(mod) 
+
+```
+
+They all provide the same result!
 
 
 # Working with permutations
@@ -204,10 +241,10 @@ mean(dati1levperm$Slope)
   summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
 Observed=mean(dati1lev$Slope)
 
-# ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible flips)
+# ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible permutations)
 Slopes_flips=c(Observed,Slopes_flips)
 
-hist(Slopes_flips)
+hist(Slopes_flips,20)
 
 ```
 
@@ -225,7 +262,6 @@ mean(abs(Slopes_flips)>=abs(Observed))
 
 ```{r}
 library(devtools)
-devtools::install("C:\\Users\\livio\\OneDrive\\Documenti\\github\\flipscores")
 #devtools::install_github("livioivil/flipscores")
 library(flipscores)
 #effect of Days:
