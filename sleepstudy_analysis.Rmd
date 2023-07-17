@@ -118,7 +118,9 @@ summary(mod)
 - Riguardo alle rette stimate con i mixed model: sono simili ma non identiche a quelle che otteniamo se stimiamo una retta per ogni soggetto; nei mixed model imponiamo che i coefficienti provengano dalla stessa popolazione (distribuita normalmente) e questo distorce (un po') le stime
 
 
-# Fourth analysis (non parametric)
+# Fourth analysis: Random Coefficient Analysis (=Second-level, Group-level Analisys)
+
+For many reasons, we will use a nonparametric (permutation-based) approach
 
 ```{r}
 library(tidyverse)
@@ -130,20 +132,11 @@ head(dati1lev)
 mean(dati1lev$Slope)
 
 
-
-
-#effect for Days
-#devtools::install_github("livioivil/flipscores")
-
-library(flipscores)
-(res=flipscores(Slope~1,data=dati1lev,score_type="standardized"))
-summary(res)
-
 ```
 
 
 
-# Workin with permutations
+# Working with permutations
 
 ```{r}
 library(ggplot2)
@@ -204,7 +197,39 @@ perm$Reaction=sleepstudy$Reaction[rnd]
 mean(dati1levperm$Slope)
 })
 
+
+# ON OBSERVED DATA:
+  dati1lev=sleepstudy %>%
+  group_by(Subject) %>%
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
+Observed=mean(dati1lev$Slope)
+
+# ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible flips)
+Slopes_flips=c(Observed,Slopes_flips)
+
 hist(Slopes_flips)
 
+```
+
+Computing the p-value:
+
+```{r}
+# One sided alternative
+mean(Slopes_flips>=Observed)
+
+# Two sided alternative
+mean(abs(Slopes_flips)>=abs(Observed))
+
+```
+
+
+```{r}
+library(devtools)
+devtools::install("C:\\Users\\livio\\OneDrive\\Documenti\\github\\flipscores")
+#devtools::install_github("livioivil/flipscores")
+library(flipscores)
+#effect of Days:
+(res=flipscores(Slope~1,data=dati1lev))
+summary(res)
 ```
 
