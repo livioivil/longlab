@@ -1,22 +1,23 @@
 ---
 title: "AdoLong"
 author: "Livio Finos"
-date: '2022-07-11'
-output: html_document
+date: '2023-07-17'
+output: 
+  html_document: 
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Import
+# Read Data
 
 Dataset:
 
 Talking about the Birth Family since the Beginning: The Communicative Openness in the New Adoptive Family
 Santona, A., Tognasso, G., Miscioscia, C.L., Russo, D., Gorla, L.
-International Journal of Environmental Research and Public Healththis link is disabled, 2022, 19(3), 1203
-
+International Journal of Environmental Research and Public Health, 2022, 19(3), 1203
 
 ```{r}
 #library(haven)
@@ -29,8 +30,13 @@ theme_set(theme_sjplot())
 
 load(file="adolong.Rdata")
 
+summary(adolong)
 
+```
 
+# Data Visualization
+
+```{r}
 dataplot <- aggregate(x = adolong$SALUTE, 
                                by = list(Time=adolong$TIME,Country=adolong$PROV_BAMB), 
                                FUN = function(x){
@@ -66,8 +72,11 @@ dataplot <- aggregate(x = adolong$SALUTE,
     geom_line( size=1.5)+geom_errorbar(data=dataplot, mapping=aes(x=Time, ymin=upper, ymax=lower), position=pd, width=0.2, size=1, color="grey",alpha=.5)
   print(GP)  
   
+```
 
-#######################################
+
+# Inference
+```{r}
 
 
 library(lmerTest)
@@ -91,4 +100,3 @@ print(plot_model(mod, type = "pred", terms = c(("TIME"), ("GENERE"))))
 print(plot_model(mod, type = "pred", terms = c("PROV_BAMB")))
 
 ```
-
