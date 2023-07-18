@@ -122,7 +122,7 @@ summary(mod)
 - Riguardo alle rette stimate con i mixed model: sono simili ma non identiche a quelle che otteniamo se stimiamo una retta per ogni soggetto; nei mixed model imponiamo che i coefficienti provengano dalla stessa popolazione (distribuita normalmente) e questo distorce (un po') le stime
 
 
-# Fourth analysis: Random Coefficient Analysis (=Second-level, Group-level Analisys)
+# Fourth analysis: Resampling-based Random Coefficient Analysis (= Second-level, Group-level Analisys)
 
 For many reasons, we will use a nonparametric (permutation-based) approach
 
@@ -140,7 +140,7 @@ mean(dati1lev$Slope)
 
 
 
-# Working with permutations
+## Working with permutations
 
 ```{r}
 library(ggplot2)

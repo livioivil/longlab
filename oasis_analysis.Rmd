@@ -49,6 +49,8 @@ p+geom_point(size = 3) +geom_smooth(method = lm)
 
 ```
 
+# Mixed Model Approach
+
 ```{r}
 library(lmerTest)
 library(ggplot2)
@@ -79,7 +81,7 @@ anova(mod)
 
 <!-- ``` -->
 
-# Un approccio alternativo (non parametrico)
+# Resampling-based Random Coefficient Analysis (= Second-level, Group-level Analisys)
 
 ```{r}
 library(tidyverse)
