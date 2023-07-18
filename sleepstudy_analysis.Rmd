@@ -138,39 +138,6 @@ mean(dati1lev$Slope)
 
 ```
 
-## Detour
-
-Let's work on Time 0 and 1 only, one can perform paired t-test
-```{r}
-sleepstudy2=sleepstudy[sleepstudy$Days<=1,]
-
-t.test(sleepstudy2$Reaction[sleepstudy2$Days==1]-sleepstudy2$Reaction[sleepstudy2$Days==0])
-```
-
-or linear model:
-```{r}
-sleepstudy2$Subject=factor(sleepstudy2$Subject)
-mod <- lm(Reaction ~ Days+ Subject, sleepstudy2)
-summary(mod) 
-
-```
-or Repeated Measures:
-
-```{r}
-mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
-summary(mod)
-```
-
-or Mixed model:
-```{r}
-
-library(lmerTest)
-mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy2)
-summary(mod) 
-
-```
-
-They all provide the same result!
 
 
 # Working with permutations
@@ -268,4 +235,40 @@ library(flipscores)
 (res=flipscores(Slope~1,data=dati1lev))
 summary(res)
 ```
+
+
+## Detour
+
+Let's work on Time 0 and 1 only, one can perform paired t-test
+
+```{r}
+sleepstudy2=sleepstudy[sleepstudy$Days<=1,]
+
+t.test(sleepstudy2$Reaction[sleepstudy2$Days==1]-sleepstudy2$Reaction[sleepstudy2$Days==0])
+```
+
+or linear model:
+```{r}
+sleepstudy2$Subject=factor(sleepstudy2$Subject)
+mod <- lm(Reaction ~ Days+ Subject, sleepstudy2)
+summary(mod) 
+
+```
+or Repeated Measures:
+
+```{r}
+mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
+summary(mod)
+```
+
+or Mixed model:
+```{r}
+
+library(lmerTest)
+mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy2)
+summary(mod) 
+
+```
+
+They all provide the same result!
 
