@@ -1,5 +1,3 @@
-Materiale per l'unità di
-**Analisi di dati Longitudinali**
-presso il master PSQT
+Didactic materials for a course on Repeated (and Longitudinal) Data Analysis
 
-Docente: Livio Finos
+by Livio Finos (<livio.finos@unipd.it>)

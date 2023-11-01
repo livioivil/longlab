@@ -1,7 +1,7 @@
 ---
 title: "AdoLong"
 author: "Livio Finos"
-date: '2023-07-17'
+date: '2023-11-01'
 output: 
   html_document: 
     toc: yes
@@ -29,6 +29,7 @@ library(ggplot2)
 theme_set(theme_sjplot())
 
 load(file="adolong.Rdata")
+adolong=(na.omit(adolong[,c("SALUTE","GENERE","TIME","ETA_B_ARRIVO","PROV_BAMB","SOGG","COMP_ESTERN")]))
 
 summary(adolong)
 
@@ -76,27 +77,46 @@ dataplot <- aggregate(x = adolong$SALUTE,
 
 
 # Inference
+
 ```{r}
 
 
 library(lmerTest)
 
-mod=glmer(SALUTE~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1+TIME|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
+mod1=glmer(SALUTE~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1+TIME|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
 
-summary(mod)  
-car::Anova(mod)
-print(plot_model(mod, type = "pred", terms = c("ETA_B_ARRIVO")))
-print(plot_model(mod, type = "pred", terms = c(("TIME"), ("GENERE"))))
-print(plot_model(mod, type = "pred", terms = c("PROV_BAMB")))
+summary(mod1)  
+car::Anova(mod1)
+print(plot_model(mod1, type = "pred", terms = c("ETA_B_ARRIVO")))
+print(plot_model(mod1, type = "pred", terms = c(("TIME"), ("GENERE"))))
+print(plot_model(mod1, type = "pred", terms = c("PROV_BAMB")))
 
 ##########
 
-mod=glmer(COMP_ESTERN~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
+mod2=glmer(COMP_ESTERN~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB+(1+TIME|SOGG),data=adolong,family=binomial,control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
 
-summary(mod)  
-car::Anova(mod)
-print(plot_model(mod, type = "pred", terms = c("ETA_B_ARRIVO")))
-print(plot_model(mod, type = "pred", terms = c(("TIME"), ("GENERE"))))
-print(plot_model(mod, type = "pred", terms = c("PROV_BAMB")))
-
+summary(mod2)  
+car::Anova(mod2)
+print(plot_model(mod2, type = "pred", terms = c("ETA_B_ARRIVO")))
+print(plot_model(mod2, type = "pred", terms = c(("TIME"), ("GENERE"))))
+print(plot_model(mod2, type = "pred", terms = c("PROV_BAMB")))
 ```
+
+
+## Coming soon...
+
+```{r}
+library(flipscores)
+
+mod3=flipscores(SALUTE~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB,data=adolong,family=binomial, id=adolong$SOGG)
+
+summary(mod3)  
+car::Anova(mod3)
+
+##########
+mod4=flipscores(COMP_ESTERN~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB,data=adolong,family=binomial, id=adolong$SOGG)
+
+summary(mod4)  
+car::Anova(mod4)
+```
+
