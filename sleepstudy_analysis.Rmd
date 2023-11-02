@@ -106,21 +106,43 @@ Mixed model is a more flexible approach.
 # Third Analysis: Mixed model
 
 ```{r}
-library(ggplot2)
-p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
-p
-
-
 library(lmerTest)
 mod <- lmer(Reaction ~ 1+Days + (1 + Days| Subject), data=sleepstudy)
 summary(mod) 
 
+sleepstudy$predicted=predict(mod)
+library(ggplot2)
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
+p
+
+plot_model(mod,type = "eff",terms = c("Days","Subject"),show.data = TRUE,jitter = .1)
 ```
+
+What if we setonly the Intercept as random component?
+
+
+```{r}
+library(lmerTest)
+mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy)
+summary(mod) 
+
+sleepstudy$predicted=predict(mod)
+library(ggplot2)
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
+p
+
+
+```
+Is this model adequate? Does it adequately fit your data?
+
+
 
 Attention:
 
 - Mixed models require careful attention in defining random effects; for example, if we do not also include a random slope coefficient, we implicitly make the same assumptions about the sphericity of the repeated measures. There is still a lively debate today about the most appropriate way to define the random component structure in mixed models, see for example Barr et al. (2013) and Bates et al. (2015) [Barr, D. J., Levy, R., Scheepers, C., & Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. Journal of memory and language, 68(3), 255-278. Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious mixed models. arXiv preprint arXiv:1506.04967].    
 - Regarding the lines estimated with mixed models: they are similar but not identical to those we obtain if we estimate a line for each subject; in mixed models, we impose that the coefficients come from the same (normally distributed) population, and this distorts the estimates (a bit).
+
+
 
 # Fourth analysis: Random Coefficient Analysis (= Summary Statistics = Second-level/Group-level Analisys)
 
