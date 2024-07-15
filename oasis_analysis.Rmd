@@ -1,7 +1,7 @@
 ---
 title: "Oasis dataset: MRI and Alzheimers"
 author: "Livio Finos"
-date: '2023-07-17'
+date: '15-16 July 2024'
 output: 
   html_document: 
     toc: yes
@@ -41,10 +41,10 @@ dati$Age=dati$Age-77
 ```{r}
 library(ggplot2)
 p <- ggplot(dati,aes(Group,nWBV,color=Group))
-p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+p+geom_point(size = 3) +geom_boxplot(alpha=.1) + theme_bw()
 
 p <- ggplot(dati,aes(Age,nWBV,color=Group))
-p+geom_point(size = 3) +geom_smooth(method = lm)
+p+geom_point(size = 3) +geom_smooth(method = lm) + theme_bw()
 
 
 ```
@@ -56,7 +56,7 @@ library(lmerTest)
 library(ggplot2)
 
 p=ggplot(dati, aes(x = Age, y = nWBV, colour = Group, group = Subject.ID)) + geom_line() + geom_point()
-p
+p + theme_bw()
 
 mod=lmer(nWBV ~ Group+Age+(1+Age|Subject.ID),data=dati)
 summary(mod)
@@ -105,28 +105,28 @@ head(dati1lev)
 ###############plots
 
 p <- ggplot(dati1lev,aes(Group,Interc,color=Group))
-p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+p+geom_point(size = 3) +geom_boxplot(alpha=.1) + theme_bw()
 
 
 p <- ggplot(dati1lev,aes(Group,Slope,color=Group))
-p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+p+geom_point(size = 3) +geom_boxplot(alpha=.1) + theme_bw()
 
 
 library(flipscores)
 
-#main within effect
-res=flipscores(Interc~1+Group,data=dati1lev,score_type="standardized")
+#Testing Intercept and Group (and any main effect between subjects):
+res=flipscores(Interc~1+Group,data=dati1lev)
 summary(res)
 anova(res)
 
-#main between effect
-(res=flipscores(Slope~1+Group,data=dati1lev,score_type="standardized"))
+#Testing Age and interaction Age:Group (and any interaction of between and within subject effects)
+(res=flipscores(Slope~1+Group,data=dati1lev))
 summary(res)
 anova(res)
 
 ```
 
-# Commenti
+# Comments
 
 Il modello testato: `Age*Group+(1|Subject.ID)` ammette solo intercetta casuale, mentre il coefficiente angolare (cioè l'evoluzione nel tempo) è uguale per tutti i soggetti (dello stesso Group vista l'interazione imposta nella formula). E' una assunzione ragionevole?
 

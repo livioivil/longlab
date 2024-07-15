@@ -1,7 +1,7 @@
 ---
 title: "AdoLong"
 author: "Livio Finos"
-date: '2023-11-01'
+date: '15-16 July 2024'
 output: 
   html_document: 
     toc: yes
@@ -103,20 +103,104 @@ print(plot_model(mod2, type = "pred", terms = c("PROV_BAMB")))
 ```
 
 
-## Coming soon...
+## Permutation approach 
 
 ```{r}
+
+library(tidyverse)
+dati1lev=adolong %>% 
+  group_by(SOGG) %>%
+  reframe(estim=(coefficients(glm(SALUTE~TIME,family=binomial))))
+dati1lev$coeff=(rep(c("Interc","Slope"),nrow(dati1lev)/2))
+
+
+temp=adolong %>%select(-c(TIME,SALUTE,COMP_ESTERN)) %>%
+  group_by(SOGG) %>%
+  unique()
+
+
+library(tidyr)
+dati1lev=spread(dati1lev, key = coeff, value = estim)
+dati1lev=left_join(dati1lev,temp)
+
+head(dati1lev)
+
+###############plots
+
+p <- ggplot(dati1lev,aes(PROV_BAMB,Interc,color=PROV_BAMB))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+
+p <- ggplot(dati1lev,aes(PROV_BAMB,Interc,color=PROV_BAMB))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+
 library(flipscores)
 
-mod3=flipscores(SALUTE~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB,data=adolong,family=binomial, id=adolong$SOGG)
+#Testing Intercept and any main effect between subjects:
+res=flipscores(Interc~GENERE+PROV_BAMB+ETA_B_ARRIVO,data=dati1lev)
+summary(res)
+anova(res)
 
-summary(mod3)  
-car::Anova(mod3)
 
-##########
-mod4=flipscores(COMP_ESTERN~GENERE*TIME+ETA_B_ARRIVO+PROV_BAMB,data=adolong,family=binomial, id=adolong$SOGG)
+#Testing Time
+res=flipscores(Slope~1,data=dati1lev)
+summary(res)
+#Testing Time and interactions between Time and any within subject effects
+(res=flipscores(Slope~GENERE+PROV_BAMB+ETA_B_ARRIVO,data=dati1lev))
+summary(res)
+anova(res)
 
-summary(mod4)  
-car::Anova(mod4)
+```
+
+### An alternative
+
+```{r}
+library(logistf)
+
+library(tidyverse)
+dati1lev=adolong %>% 
+  group_by(SOGG) %>%
+  reframe(estim=(coefficients(logistf(SALUTE~TIME,family= binomial(link="logit")))))
+dati1lev$coeff=(rep(c("Interc","Slope"),nrow(dati1lev)/2))
+
+
+temp=adolong %>%select(-c(TIME,SALUTE,COMP_ESTERN)) %>%
+  group_by(SOGG) %>%
+  unique()
+
+
+library(tidyr)
+dati1lev=spread(dati1lev, key = coeff, value = estim)
+dati1lev=left_join(dati1lev,temp)
+
+head(dati1lev)
+
+###############plots
+
+p <- ggplot(dati1lev,aes(PROV_BAMB,Interc,color=PROV_BAMB))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+
+p <- ggplot(dati1lev,aes(PROV_BAMB,Interc,color=PROV_BAMB))
+p+geom_point(size = 3) +geom_boxplot(alpha=.1)
+
+
+library(flipscores)
+
+#Testing Intercept and any main effect between subjects:
+res=flipscores(Interc~GENERE+PROV_BAMB+ETA_B_ARRIVO,data=dati1lev)
+summary(res)
+anova(res)
+
+
+#Testing Time
+res=flipscores(Slope~1,data=dati1lev)
+summary(res)
+#Testing Time and interactions between Time and any within subject effects
+(res=flipscores(Slope~GENERE+PROV_BAMB+ETA_B_ARRIVO,data=dati1lev))
+summary(res)
+anova(res)
+
 ```
 

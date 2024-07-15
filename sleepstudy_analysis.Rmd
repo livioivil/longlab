@@ -1,7 +1,7 @@
 ---
 title: "Sleep and Reaction"
 author: "Livio Finos"
-date: '2023-11-01'
+date: '15-16 July 2024'
 output: 
   html_document: 
     toc: yes
@@ -23,7 +23,7 @@ library(lmerTest)
 
 ```{r}
 library(ggplot2)
-p=ggplot(sleepstudy, aes(x = Days, y = Reaction)) + geom_point()
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction)) + geom_point() + theme_bw()
 
 p
 
@@ -56,7 +56,10 @@ print(mod)
 
 ## Sphericity
 
-Sphericity is an assumption about the structure of the covariance matrix in a repeated measures design. Before we describe it, let's consider a simpler (but more strict) condition.
+Sphericity is an assumption about the structure of the covariance matrix in a repeated measures design. 
+It is not an issue in this example, but it is relevant when more than two conditions are measured within subject and compared. Assume, for example that three conditions are compared: `Condition A`, `Condition B` and `Condition C`.
+
+Before we describe Sphericity, let's consider a simpler (but more strict) condition.
 
 **Compound symmetry**
 
@@ -68,7 +71,7 @@ similar and that no two conditions are any more dependent than any other two.
 
 Provided the observed covariances are roughly equal in our samples (and the variances are OK too) we can be pretty confident that compound symmetry is not violated.
 
-compound symmetry is met when the correlation between `Condition f` and `Condition h` is equal to the correlation between `Condition f` and `Condition o` or `Condition h` and `Condition n`, etc (same for any other factor within subject, such as `Chan`). But a more direct way to think about compound symmetry is to say that it requires that all subjects in each group change in the same way over trials. In other words the slopes of the lines regressing the dependent variable on time are the same for all subjects. 
+Compound symmetry is met when the correlation between `Condition A` and `Condition B` is equal to the correlation between `Condition A` and `Condition C` and between `Condition B` and `Condition C` (and all pairwise comparisons, in general). But a more direct way to think about compound symmetry is to say that it requires that all subjects in each group change in the same way over trials. In other words the slopes of the lines regressing the dependent variable on time are the same for all subjects. 
 Put that way it is easy to see that compound symmetry can really be an unrealistic assumption. 
 
 
@@ -113,12 +116,10 @@ summary(mod)
 sleepstudy$predicted=predict(mod)
 library(ggplot2)
 p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
-p
-
-plot_model(mod,type = "eff",terms = c("Days","Subject"),show.data = TRUE,jitter = .1)
+p+ theme_bw()
 ```
 
-What if we setonly the Intercept as random component?
+What if we set only the Intercept as random component?
 
 
 ```{r}
@@ -129,18 +130,18 @@ summary(mod)
 sleepstudy$predicted=predict(mod)
 library(ggplot2)
 p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
-p
+p+ theme_bw()
 
 
 ```
+
 Is this model adequate? Does it adequately fit your data?
 
 
-
-Attention:
+REMARKS:
 
 - Mixed models require careful attention in defining random effects; for example, if we do not also include a random slope coefficient, we implicitly make the same assumptions about the sphericity of the repeated measures. There is still a lively debate today about the most appropriate way to define the random component structure in mixed models, see for example Barr et al. (2013) and Bates et al. (2015) [Barr, D. J., Levy, R., Scheepers, C., & Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. Journal of memory and language, 68(3), 255-278. Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious mixed models. arXiv preprint arXiv:1506.04967].    
-- Regarding the lines estimated with mixed models: they are similar but not identical to those we obtain if we estimate a line for each subject; in mixed models, we impose that the coefficients come from the same (normally distributed) population, and this distorts the estimates (a bit).
+- Regarding the lines estimated with mixed models: they are similar but not identical to those we obtain if we estimate a line for each subject; in mixed models, we impose that the coefficients come from the same (normally distributed) population, and this implies that the estimates are (a bit) biased.
 
 
 
@@ -191,11 +192,11 @@ rnd=as.vector(rnd)
 perm$Reaction=sleepstudy$Reaction[rnd]
 
 p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
-p + ggtitle("A random permutation")
+p + ggtitle("A random permutation") + theme_bw()
 
 dati1levperm=perm %>%
   group_by(Subject) %>%
-  summarize(estim=(coefficients(lm(Reaction ~ Days))))
+  reframe(estim=(coefficients(lm(Reaction ~ Days))))
 dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
 dati1levperm=spread(dati1levperm, key = coeff, value = estim)
 
@@ -211,7 +212,7 @@ rnd=as.vector(rnd)
 perm$Reaction=sleepstudy$Reaction[rnd]
 
 p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
-p + ggtitle("Another random permutation")
+p + ggtitle("Another random permutation") + theme_bw()
 
 dati1levperm=perm %>%
   group_by(Subject) %>%
@@ -242,13 +243,13 @@ mean(dati1levperm$Slope)
   dati1lev=sleepstudy %>%
   group_by(Subject) %>%
   summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
-Observed=mean(dati1lev$Slope)
+(Observed=mean(dati1lev$Slope))
 
 # ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible permutations)
 Slopes_flips=c(Observed,Slopes_flips)
 
 hist(Slopes_flips,20)
-
+points(Observed,0,cex=3,col="red",pch=20)
 ```
 
 Computing the p-value:
@@ -296,7 +297,7 @@ mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
 summary(mod)
 ```
 
-or Mixed model (note that we can't set a random slope when we have only two observations; the random coefficients would be confused with the random error):
+or Mixed model (note that we can't set a random slope when we have only two observations; the random coefficients would be not separable from  the random error):
 
 ```{r}
 
