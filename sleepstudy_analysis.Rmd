@@ -36,6 +36,10 @@ summary(mod)
 
 # Second analysis: Repeated measures ANOVA
 
+```{r}
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = Reaction, colour = Subject, group = Subject))
+p+ theme_bw()
+```
 
 
 ```{r}
@@ -158,6 +162,7 @@ dati1lev=sleepstudy %>%
 head(dati1lev)
 mean(dati1lev$Slope)
 
+hist(dati1lev$Slope)
 
 ```
 
