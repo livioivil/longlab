@@ -119,7 +119,7 @@ summary(mod)
 
 sleepstudy$predicted=predict(mod)
 library(ggplot2)
-p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
+p=ggplot(sleepstudy, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point() + geom_line(aes(x = Days, y = predicted, colour = Subject, group = Subject))
 p+ theme_bw()
 ```
 
@@ -128,7 +128,7 @@ What if we set only the Intercept as random component?
 
 ```{r}
 library(lmerTest)
-mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy)
+mod <- lmer(Reaction ~ 1 + Days + (1 | Subject), data=sleepstudy)
 summary(mod) 
 
 sleepstudy$predicted=predict(mod)
