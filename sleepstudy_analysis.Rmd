@@ -1,7 +1,6 @@
 ---
 title: "Sleep and Reaction"
 author: "Livio Finos"
-date: '15-16 July 2024'
 output: 
   html_document: 
     toc: yes
@@ -183,6 +182,18 @@ What are the assumptions that are done in this approach?
 
 The lack of assumption 2 can't be (easily) solved via parametric approach. Let's consider a nonparametric permutation approach.
 
+The simple code one can use is:
+
+```{r}
+library(jointest)
+mod=flip2sss(Reaction ~ 1 + Days, 
+             cluster =sleepstudy$Subject,data=sleepstudy)
+summary(mod)
+```
+
+and in the following we show how this result is reached.
+
+
 
 ```{r}
 library(ggplot2)
@@ -276,6 +287,10 @@ library(flipscores)
 (res=flipscores(Slope~1,data=dati1lev))
 summary(res)
 ```
+
+
+
+
 
 
 # Detour

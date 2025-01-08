@@ -1,7 +1,6 @@
 ---
 title: "Oasis dataset: MRI and Alzheimers"
 author: "Livio Finos"
-date: '15-16 July 2024'
 output: 
   html_document: 
     toc: yes
@@ -81,7 +80,23 @@ anova(mod)
 
 <!-- ``` -->
 
-# Resampling-based Random Coefficient Analysis (= Second-level, Group-level Analisys)
+# (Resampling-based) Two-Stage Summary Statistics approach: flip2sss (= Second-level, Group-level Analisys)
+
+```{r}
+library(jointest)
+
+mod=flip2sss(nWBV ~ Age*Group+Gender*Group, 
+             cluster =oasis$Subject.ID,data=oasis)
+summary(mod)
+
+#ANOVA-like combination
+#Overall
+summary(combine(mod))
+#by Variables
+summary(combine_contrasts(mod))
+
+```
+Do it again, step-by-step
 
 ```{r}
 library(tidyverse)
