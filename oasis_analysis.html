@@ -424,6 +424,7 @@ p+geom_point(size = 3) +geom_smooth(method = lm) + theme_bw()</code></pre>
 <pre class="r"><code>library(lmerTest)</code></pre>
 <pre><code>## Warning: il pacchetto &#39;lmerTest&#39; è stato creato con R versione 4.4.2</code></pre>
 <pre><code>## Caricamento del pacchetto richiesto: lme4</code></pre>
+<pre><code>## Warning: il pacchetto &#39;lme4&#39; è stato creato con R versione 4.4.2</code></pre>
 <pre><code>## Caricamento del pacchetto richiesto: Matrix</code></pre>
 <pre><code>## Warning: il pacchetto &#39;Matrix&#39; è stato creato con R versione 4.4.2</code></pre>
 <pre><code>## 
@@ -546,40 +547,40 @@ summary(mod)</code></pre>
 <pre class="r"><code>mod=flip2sss(nWBV ~ Age*Group+Gender*Group, 
              cluster =oasis$Subject.ID,data=oasis)
 summary(mod)</code></pre>
-<pre><code>##         Model                  Coeff     Estimate        Score Std. Error
-## 1 .Intercept.            (Intercept)  1.030313679 132.91046453 8.54757590
-## 2 .Intercept.         GroupConverted  0.186585167   3.77560573 1.99232897
-## 3 .Intercept.          GroupDemented  0.351746858  14.40487134 2.91868493
-## 4 .Intercept.                GenderM -0.051614162  -2.13764126 2.83853745
-## 5 .Intercept. GroupConverted:GenderM  0.102861696   0.72064740 1.16717610
-## 6 .Intercept.  GroupDemented:GenderM -0.234551571  -4.47276459 1.93869429
-## 7         Age                    Age -0.003572179  -0.67871410 0.08965151
-## 8         Age     GroupConverted:Age -0.002644949  -0.08191186 0.03355236
-## 9         Age      GroupDemented:Age -0.003083741  -0.25459218 0.05592513
-##      z value   Part. Cor      p
-## 1 15.5494922  0.81057331 0.0002
-## 2  1.8950714  0.09878743 0.0800
-## 3  4.9353979  0.25727540 0.0006
-## 4 -0.7530784 -0.03925693 0.3948
-## 5  0.6174282  0.03218567 0.4204
-## 6 -2.3071015 -0.12026598 0.0414
-## 7 -7.5705822 -0.39304505 0.0002
-## 8 -2.4413146 -0.12674674 0.0032
-## 9 -4.5523750 -0.23634753 0.0002</code></pre>
+<pre><code>##         Model                  Coeff  Estimate   Score Std. Error z value
+## 1 .Intercept.            (Intercept)  1.043045 52.1522    5.52680  9.4362
+## 2 .Intercept.         GroupConverted  0.208801  1.7400    1.40909  1.2348
+## 3 .Intercept.          GroupDemented  0.359185  6.4469    2.12560  3.0330
+## 4 .Intercept.                GenderM -0.057093 -0.8722    1.89924 -0.4593
+## 5 .Intercept. GroupConverted:GenderM  0.028543  0.0687    0.75333  0.0912
+## 6 .Intercept.  GroupDemented:GenderM -0.253063 -1.9625    1.36195 -1.4410
+## 7         Age                    Age -0.003744 -0.2696    0.05989 -4.5012
+## 8         Age     GroupConverted:Age -0.002543 -0.0298    0.02258 -1.3199
+## 9         Age      GroupDemented:Age -0.003077 -0.1043    0.03912 -2.6653
+##   Part. Cor      p
+## 1  0.783637 0.0002
+## 2  0.102548 0.2952
+## 3  0.251875 0.0136
+## 4 -0.038140 0.6410
+## 5  0.007574 0.9032
+## 6 -0.119667 0.1888
+## 7 -0.369994 0.0002
+## 8 -0.108497 0.1492
+## 9 -0.219084 0.0060</code></pre>
 <pre class="r"><code>#ANOVA-like combination
 #Overall
 summary(combine(mod))</code></pre>
-<pre><code>##     Model Coeff Stat nTests        S     p
-## 1 Overall  many maxT      9 132.9105 2e-04</code></pre>
+<pre><code>##     Model Coeff Stat nTests     S     p
+## 1 Overall  many maxT      9 52.15 2e-04</code></pre>
 <pre class="r"><code>#by Variables
 summary(combine_contrasts(mod))</code></pre>
-<pre><code>##         Model         Coeff        Stat nTests           S      p
-## 1 .Intercept.   (Intercept) Mahalanobis      1  0.15016757 0.0002
-## 2 .Intercept.         Group Mahalanobis      2 14.94700121 0.0004
-## 3 .Intercept.       GenderM Mahalanobis      1  0.01242016 0.3948
-## 4 .Intercept. Group:GenderM Mahalanobis      2  6.07486449 0.0450
-## 5         Age           Age Mahalanobis      1  0.12333846 0.0002
-## 6         Age     Group:Age Mahalanobis      2 22.89142351 0.0002</code></pre>
+<pre><code>##         Model         Coeff        Stat nTests        S      p
+## 1 .Intercept.   (Intercept) Mahalanobis      1 0.093910 0.0002
+## 2 .Intercept.         Group Mahalanobis      2 6.506148 0.0230
+## 3 .Intercept.       GenderM Mahalanobis      1 0.007315 0.6410
+## 4 .Intercept. Group:GenderM Mahalanobis      2 2.073799 0.3634
+## 5         Age           Age Mahalanobis      1 0.072867 0.0002
+## 6         Age     Group:Age Mahalanobis      2 8.082997 0.0094</code></pre>
 <p>Do it again, step-by-step</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## Warning: il pacchetto &#39;tidyverse&#39; è stato creato con R versione 4.4.2</code></pre>
@@ -652,8 +653,8 @@ summary(res)</code></pre>
 ## Coefficients:
 ##                Estimate    Score Std. Error  z value Part. Cor Pr(&gt;|z|)    
 ## (Intercept)     0.73733 53.08751    4.39128 12.08929     0.994   0.0002 ***
-## GroupConverted  0.02229  0.26123    0.19920  1.31139     0.108   0.0694 .  
-## GroupDemented  -0.03476 -1.17769    0.35035 -3.36141    -0.276   0.0012 ** 
+## GroupConverted  0.02229  0.26123    0.19920  1.31139     0.108   0.0684 .  
+## GroupDemented  -0.03476 -1.17769    0.35035 -3.36141    -0.276   0.0008 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -672,8 +673,8 @@ summary(res)</code></pre>
 ## Inference is provided by FlipScores approach (5000 sign flips).
 ## 
 ## Model: Interc ~ 1 + Group
-##       Df  Score Pr(&gt;Score)    
-## Group  2 17.082      2e-04 ***
+##       Df Score Pr(&gt;Score)    
+## Group  2 17.24      2e-04 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <pre class="r"><code>#Testing Age and interaction Age:Group (and any interaction of between and within subject effects)
@@ -693,8 +694,8 @@ summary(res)</code></pre>
 ## Coefficients:
 ##                 Estimate     Score Std. Error   z value Part. Cor Pr(&gt;|z|)    
 ## (Intercept)    -0.003744 -0.269554   0.059885 -4.501172    -0.370   0.0002 ***
-## GroupConverted -0.002543 -0.029805   0.022581 -1.319924    -0.108   0.1398    
-## GroupDemented  -0.003077 -0.104255   0.039116 -2.665270    -0.219   0.0086 ** 
+## GroupConverted -0.002543 -0.029805   0.022581 -1.319924    -0.108   0.1354    
+## GroupDemented  -0.003077 -0.104255   0.039116 -2.665270    -0.219   0.0082 ** 
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
@@ -713,8 +714,8 @@ summary(res)</code></pre>
 ## Inference is provided by FlipScores approach (5000 sign flips).
 ## 
 ## Model: Slope ~ 1 + Group
-##       Df Score Pr(&gt;Score)  
-## Group  2 7.857      0.012 *
+##       Df  Score Pr(&gt;Score)  
+## Group  2 7.7341     0.0114 *
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>

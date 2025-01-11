@@ -57,15 +57,23 @@ library(ggplot2)
 p=ggplot(dati, aes(x = Age, y = nWBV, colour = Group, group = Subject.ID)) + geom_line() + geom_point()
 p + theme_bw()
 
-mod=lmer(nWBV ~ Group+Age+(1+Age|Subject.ID),data=dati)
-summary(mod)
-anova(mod)
-
-
 mod=lmer(nWBV ~ Age*Group+(1+Age|Subject.ID),data=dati)
 summary(mod)
-anova(mod)
 
+# mod=lmer(nWBV ~ Age*Group+Gender*Group+(1|Subject.ID),data=dati)
+# summary(mod)
+# anova(mod)
+
+
+library(emmeans)
+emm=emmeans(mod,~Group|Age)
+emm
+# modc_mcp=pairs(emm, "trt.vs.ctrl1")
+modc_mcp=pairs(emm)
+modc_mcp
+
+con1 <- contrast(emm, interaction = "pairwise")
+pairs(con1, by = NULL)
 
 ```
 

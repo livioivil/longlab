@@ -152,186 +152,186 @@ REMARKS:
 - Mixed models require careful attention in defining random effects; for example, if we do not also include a random slope coefficient, we implicitly make the same assumptions about the sphericity of the repeated measures. There is still a lively debate today about the most appropriate way to define the random component structure in mixed models, see for example Barr et al. (2013) and Bates et al. (2015) [Barr, D. J., Levy, R., Scheepers, C., & Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. Journal of memory and language, 68(3), 255-278. Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious mixed models. arXiv preprint arXiv:1506.04967].    
 - Regarding the lines estimated with mixed models: they are similar but not identical to those we obtain if we estimate a line for each subject; in mixed models, we impose that the coefficients come from the same (normally distributed) population, and this implies that the estimates are (a bit) biased.
 
-<!-- # Fourth analysis: Random Coefficient Analysis (= Summary Statistics = Second-level/Group-level Analisys) -->
+# Fourth analysis: Random Coefficient Analysis (= Summary Statistics = Second-level/Group-level Analisys)
 
-<!-- ## Summary statistics, one for each subject  -->
+## Summary statistics, one for each subject
 
-<!-- ```{r} -->
-<!-- library(tidyverse) -->
-<!-- dati1lev=sleepstudy %>% -->
-<!--   group_by(Subject) %>% -->
-<!--   summarize(Slope=(coefficients(lm(Reaction ~ Days))[2])) -->
+```{r}
+library(tidyverse)
+dati1lev=sleepstudy %>%
+  group_by(Subject) %>%
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
 
-<!-- head(dati1lev) -->
-<!-- mean(dati1lev$Slope) -->
+head(dati1lev)
+mean(dati1lev$Slope)
 
-<!-- hist(dati1lev$Slope) -->
+hist(dati1lev$Slope)
 
-<!-- ``` -->
-
-
-<!-- ## Parametric Analysis -->
-
-<!-- If we are interested in testing if the sleep deprivation is associated with larger reaction times, we can simply test if the average of the slopes is equal to 0. This can be donw with a simple one-sample t.test.    -->
-<!-- ```{r} -->
-<!-- t.test(dati1lev$Slope) -->
-<!-- ``` -->
-<!-- What are the assumptions that are done in this approach?   -->
-
-<!-- 1. Independence of observations (= subjects in this method): OK -->
-<!-- 2. Homoscedasticity (= same variance for each observation/subject). It implies balanced design and same variability of the measures among all subjects. OK? Always OK?   -->
-<!-- 3. Normality, but with an adequate number of observations, we can invoke the Central Limit Theorem. -->
-
-<!-- ## Working with permutations (Resampling-based) -->
-
-<!-- The lack of assumption 2 can't be (easily) solved via parametric approach. Let's consider a nonparametric permutation approach. -->
-
-<!-- The simple code one can use is: -->
-
-<!-- ```{r} -->
-<!-- library(jointest) -->
-<!-- mod=flip2sss(Reaction ~ 1 + Days,  -->
-<!--              cluster =sleepstudy$Subject,data=sleepstudy) -->
-<!-- summary(mod) -->
-<!-- ``` -->
-
-<!-- and in the following we show how this result is reached. -->
+```
 
 
+## Parametric Analysis
 
-<!-- ```{r} -->
-<!-- library(ggplot2) -->
-<!-- perm=sleepstudy -->
+If we are interested in testing if the sleep deprivation is associated with larger reaction times, we can simply test if the average of the slopes is equal to 0. This can be donw with a simple one-sample t.test.
+```{r}
+t.test(dati1lev$Slope)
+```
+What are the assumptions that are done in this approach?
 
-<!-- rnd=sapply((0:17)*10,function(strt) { -->
-<!--   if(rbinom(1,1,.5)==1) -->
-<!--     strt+(1:10) else -->
-<!--       strt+(10:1) -->
-<!--   }) -->
-<!-- rnd=as.vector(rnd) -->
-<!-- perm$Reaction=sleepstudy$Reaction[rnd] -->
+1. Independence of observations (= subjects in this method): OK
+2. Homoscedasticity (= same variance for each observation/subject). It implies balanced design and same variability of the measures among all subjects. OK? Always OK?
+3. Normality, but with an adequate number of observations, we can invoke the Central Limit Theorem.
 
-<!-- p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00) -->
-<!-- p + ggtitle("A random permutation") + theme_bw() -->
+## Working with permutations (Resampling-based)
 
-<!-- dati1levperm=perm %>% -->
-<!--   group_by(Subject) %>% -->
-<!--   reframe(estim=(coefficients(lm(Reaction ~ Days)))) -->
-<!-- dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject))) -->
-<!-- dati1levperm=spread(dati1levperm, key = coeff, value = estim) -->
+The lack of assumption 2 can't be (easily) solved via parametric approach. Let's consider a nonparametric permutation approach.
 
-<!-- head(dati1levperm) -->
-<!-- mean(dati1levperm$Slope) -->
+The simple code one can use is:
 
-<!-- rnd=sapply((0:17)*10,function(strt) { -->
-<!--   if(rbinom(1,1,.5)==1) -->
-<!--     strt+(1:10) else -->
-<!--       strt+(10:1) -->
-<!--   }) -->
-<!-- rnd=as.vector(rnd) -->
-<!-- perm$Reaction=sleepstudy$Reaction[rnd] -->
+```{r}
+library(jointest)
+mod=flip2sss(Reaction ~ 1 + Days,
+             cluster =sleepstudy$Subject,data=sleepstudy)
+summary(mod)
+```
 
-<!-- p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00) -->
-<!-- p + ggtitle("Another random permutation") + theme_bw() -->
-
-<!-- dati1levperm=perm %>% -->
-<!--   group_by(Subject) %>% -->
-<!--   summarize(estim=(coefficients(lm(Reaction ~ Days)))) -->
-<!-- dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject))) -->
-<!-- dati1levperm=spread(dati1levperm, key = coeff, value = estim) -->
-
-<!-- head(dati1levperm) -->
-<!-- mean(dati1levperm$Slope) -->
+and in the following we show how this result is reached.
 
 
-<!-- Slopes_flips=replicate(100,{ -->
-<!--   rnd=sapply((0:17)*10,function(strt) { -->
-<!--   if(rbinom(1,1,.5)==1) -->
-<!--     strt+(1:10) else -->
-<!--       strt+(10:1) -->
-<!--   }) -->
-<!-- rnd=as.vector(rnd) -->
-<!-- perm$Reaction=sleepstudy$Reaction[rnd] -->
-<!--   dati1levperm=perm %>% -->
-<!--   group_by(Subject) %>% -->
-<!--   summarize(Slope=(coefficients(lm(Reaction ~ Days))[2])) -->
-<!-- mean(dati1levperm$Slope) -->
-<!-- }) -->
+
+```{r}
+library(ggplot2)
+perm=sleepstudy
+
+rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+
+p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
+p + ggtitle("A random permutation") + theme_bw()
+
+dati1levperm=perm %>%
+  group_by(Subject) %>%
+  reframe(estim=(coefficients(lm(Reaction ~ Days))))
+dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
+dati1levperm=spread(dati1levperm, key = coeff, value = estim)
+
+head(dati1levperm)
+mean(dati1levperm$Slope)
+
+rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+
+p=ggplot(perm, aes(x = Days, y = Reaction, colour = Subject, group = Subject)) + geom_point()  +geom_smooth(method = lm,alpha=.00)
+p + ggtitle("Another random permutation") + theme_bw()
+
+dati1levperm=perm %>%
+  group_by(Subject) %>%
+  summarize(estim=(coefficients(lm(Reaction ~ Days))))
+dati1levperm$coeff=(rep(c("Interc","Slope"),nlevels(sleepstudy$Subject)))
+dati1levperm=spread(dati1levperm, key = coeff, value = estim)
+
+head(dati1levperm)
+mean(dati1levperm$Slope)
 
 
-<!-- # ON OBSERVED DATA: -->
-<!--   dati1lev=sleepstudy %>% -->
-<!--   group_by(Subject) %>% -->
-<!--   summarize(Slope=(coefficients(lm(Reaction ~ Days))[2])) -->
-<!-- (Observed=mean(dati1lev$Slope)) -->
-
-<!-- # ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible permutations) -->
-<!-- Slopes_flips=c(Observed,Slopes_flips) -->
-
-<!-- hist(Slopes_flips,20) -->
-<!-- points(Observed,0,cex=3,col="red",pch=20) -->
-<!-- ``` -->
-
-<!-- Computing the p-value: -->
-
-<!-- ```{r} -->
-<!-- # One sided alternative -->
-<!-- mean(Slopes_flips>=Observed) -->
-
-<!-- # Two sided alternative -->
-<!-- mean(abs(Slopes_flips)>=abs(Observed)) -->
-
-<!-- ``` -->
+Slopes_flips=replicate(100,{
+  rnd=sapply((0:17)*10,function(strt) {
+  if(rbinom(1,1,.5)==1)
+    strt+(1:10) else
+      strt+(10:1)
+  })
+rnd=as.vector(rnd)
+perm$Reaction=sleepstudy$Reaction[rnd]
+  dati1levperm=perm %>%
+  group_by(Subject) %>%
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
+mean(dati1levperm$Slope)
+})
 
 
-<!-- ```{r} -->
-<!-- #devtools::install_github("livioivil/flipscores") -->
-<!-- library(flipscores) -->
-<!-- #effect of Days: -->
-<!-- (res=flipscores(Slope~1,data=dati1lev)) -->
-<!-- summary(res) -->
-<!-- ``` -->
+# ON OBSERVED DATA:
+  dati1lev=sleepstudy %>%
+  group_by(Subject) %>%
+  summarize(Slope=(coefficients(lm(Reaction ~ Days))[2]))
+(Observed=mean(dati1lev$Slope))
+
+# ALWAYS ADD THE OBSERVED TEST STATISTIC!!! (it is one of the possible permutations)
+Slopes_flips=c(Observed,Slopes_flips)
+
+hist(Slopes_flips,20)
+points(Observed,0,cex=3,col="red",pch=20)
+```
+
+Computing the p-value:
+
+```{r}
+# One sided alternative
+mean(Slopes_flips>=Observed)
+
+# Two sided alternative
+mean(abs(Slopes_flips)>=abs(Observed))
+
+```
 
 
+```{r}
+#devtools::install_github("livioivil/flipscores")
+library(flipscores)
+#effect of Days:
+(res=flipscores(Slope~1,data=dati1lev))
+summary(res)
+```
 
 
 
 
-<!-- # Detour -->
 
-<!-- Let's work on Time 0 and 1 only, one can perform paired t-test -->
 
-<!-- ```{r} -->
-<!-- sleepstudy2=sleepstudy[sleepstudy$Days<=1,] -->
+# Detour
 
-<!-- t.test(sleepstudy2$Reaction[sleepstudy2$Days==1]-sleepstudy2$Reaction[sleepstudy2$Days==0]) -->
-<!-- ``` -->
+Let's work on Time 0 and 1 only, one can perform paired t-test
 
-<!-- or linear model: -->
-<!-- ```{r} -->
-<!-- sleepstudy2$Subject=factor(sleepstudy2$Subject) -->
-<!-- mod <- lm(Reaction ~ Days+ Subject, sleepstudy2) -->
-<!-- summary(mod)  -->
+```{r}
+sleepstudy2=sleepstudy[sleepstudy$Days<=1,]
 
-<!-- ``` -->
-<!-- or Repeated Measures: -->
+t.test(sleepstudy2$Reaction[sleepstudy2$Days==1]-sleepstudy2$Reaction[sleepstudy2$Days==0])
+```
 
-<!-- ```{r} -->
-<!-- mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy) -->
-<!-- summary(mod) -->
-<!-- ``` -->
+or linear model:
+```{r}
+sleepstudy2$Subject=factor(sleepstudy2$Subject)
+mod <- lm(Reaction ~ Days+ Subject, sleepstudy2)
+summary(mod)
 
-<!-- or Mixed model (note that we can't set a random slope when we have only two observations; the random coefficients would be not separable from  the random error): -->
+```
+or Repeated Measures:
 
-<!-- ```{r} -->
+```{r}
+mod=aov(Reaction ~ Days + Error(Subject/(Days)),data=sleepstudy)
+summary(mod)
+```
 
-<!-- library(lmerTest) -->
-<!-- mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy2) -->
-<!-- summary(mod)  -->
+or Mixed model (note that we can't set a random slope when we have only two observations; the random coefficients would be not separable from  the random error):
 
-<!-- ``` -->
+```{r}
 
-<!-- They all provide the same result! -->
+library(lmerTest)
+mod <- lmer(Reaction ~ 1+Days + (1 | Subject), data=sleepstudy2)
+summary(mod)
+
+```
+
+They all provide the same result!
 
 
 # (minimal) Bibliography
