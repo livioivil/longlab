@@ -68,6 +68,7 @@ summary(mod)
 library(emmeans)
 emm=emmeans(mod,~Group|Age)
 emm
+
 # modc_mcp=pairs(emm, "trt.vs.ctrl1")
 modc_mcp=pairs(emm)
 modc_mcp

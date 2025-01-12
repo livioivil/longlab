@@ -1,23 +1,30 @@
 ---
-title: "mixed"
+title: "Some discussion around Mixed models"
 output: html_document
 date: "2025-01-11"
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-I sincerely apologize for the continued difficulties. You're absolutely right to be frustrated, and I appreciate your patience. Let's try one more time with a dataset that is guaranteed to be available in base R and requires no additional packages to load.
+A usefull reference:
+
+Glenn Williams (2022) R for Psych
+<https://glennwilliams.me/r4psych/mixed-effects-models.html#generalised-mixed-effects-models>
+
+
+# A first example:
 
 We'll use the "CO2" dataset, which comes pre-installed with R. While it's not a neuroscience dataset, we can adapt it to demonstrate the principles of mixed models in a way that could be relevant to neuroscience research.
 
-Here's the R code using a dataset that should definitely work:
+Here's the R code
 
 ```{r pressure, echo=FALSE}
 
 # Load only the necessary libraries for analysis
-library(lme4)
+library(lmerTest)
 library(emmeans)
 
 # Load the CO2 dataset (comes pre-installed with R)
@@ -25,6 +32,7 @@ data(CO2)
 
 # Display the first few rows of the dataset
 head(CO2)
+
 
 # Fit the mixed model
 model <- lmer(uptake ~ Type * Treatment + (1|Plant), data = CO2)
@@ -96,4 +104,57 @@ This dataset, while not from neuroscience, can demonstrate principles of mixed m
 
 The analysis includes model fitting, ANOVA, fixed effects estimation, confidence intervals, and post-hoc comparisons. The basic plot helps visualize the interaction between the two factors.
 
-I sincerely hope this example works on your system and helps explain mixed models in a context that can be related to neuroscience research. If you encounter any issues with this code, please let me know, and I'll do my best to provide an even simpler solution.
+# (un)politeness of crossed random effects
+
+This example is taken from and described in:
+Bodo Winter (2013) A very basic tutorial for performing linear mixed effects analyses 
+
+<//efaidnbmnnnibpcajpcglclefindmkaj/https://jontalle.web.engr.illinois.edu/MISC/lme4/bw_LME_tutorial.pdf>
+
+
+```{r}
+politeness=  read.csv("http://www.bodowinter.com/tutorial/politeness_data.csv") 
+politeness$attitude=factor(politeness$attitude)
+contrasts(politeness$attitude)=contr.sum
+mod=lmer(frequency ~ attitude + gender+ (1|subject) + (0+attitude|subject) + (1|scenario), data=politeness) 
+summary(mod)
+
+```
+
+
+## Plotting tools
+
+for the first model:
+```{r message=FALSE}
+library(effects)
+plot(allEffects(mod))
+
+#plot random effects:
+require(lattice)
+qqmath(ranef(mod, condVar=TRUE))
+```
+
+The second model:
+```{r,message=FALSE}
+library(effects)
+plot(allEffects(mod3))
+
+#plot random effects:
+require(lattice)
+qqmath(ranef(mod3, condVar=TRUE))
+
+# scatter plot
+ggpairs(ranef(mod3, condVar=TRUE)$ID)+theme_bw()
+```
+
+An alternative plotting tool:
+
+```{r message=FALSE}
+library(sjPlot)
+library(ggplot2)
+plot_model(mod3, type = "pred", terms = c("Content","Scrambled", "Chan"))+theme_bw()
+```
+
+
+<https://courses.washington.edu/psy524a/_book/linear-mixed-models.html>
+
