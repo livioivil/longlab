@@ -1,0 +1,102 @@
+---
+title: "Examples of Mixed models with Crossed random effects"
+output: 
+  html_document: 
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A usefull reference:
+
+Glenn Williams (2022) R for Psych
+<https://glennwilliams.me/r4psych/mixed-effects-models.html#generalised-mixed-effects-models>
+
+Another one:
+
+Bodo Winter (2013) A very basic tutorial for performing linear mixed effects analyses 
+
+<//efaidnbmnnnibpcajpcglclefindmkaj/https://jontalle.web.engr.illinois.edu/MISC/lme4/bw_LME_tutorial.pdf>
+
+
+# (un)Politeness of crossed random effects
+
+This example is taken from and described in:
+Bodo Winter (2013) A very basic tutorial for performing linear mixed effects analyses 
+
+<//efaidnbmnnnibpcajpcglclefindmkaj/https://jontalle.web.engr.illinois.edu/MISC/lme4/bw_LME_tutorial.pdf>
+
+
+```{r}
+politeness=  read.csv("http://www.bodowinter.com/tutorial/politeness_data.csv") 
+politeness$attitude=factor(politeness$attitude)
+contrasts(politeness$attitude)=contr.sum
+
+library(lmerTest)
+mod=lmer(frequency ~ attitude + gender+ (1+attitude||subject) + (1+attitude||scenario), data=politeness) #, control = lmerControl(optimizer="Nelder_Mead") #, control = lmerControl(optimizer="bobyqa")
+summary(mod)
+
+# see  help('isSingular')
+# install.packages("optimx")
+# library(optimx) 
+# mod=lmer(frequency ~ attitude + gender+ (1+attitude||subject) + (1+attitude||scenario), data=politeness, control = lmerControl(optimizer= "optimx",
+#                                                optCtrl  = list(method="nlminb"))) 
+
+## it converges, but does it make sense??
+# mod=lmer(frequency ~ attitude + gender+ (1|subject) + (1|scenario), data=politeness) 
+# summary(mod)
+
+```
+
+
+## Plotting tools
+
+for the first model:
+```{r message=FALSE}
+library(effects)
+plot(allEffects(mod))
+
+#plot random effects:
+require(lattice)
+# qqmath(ranef(mod, condVar=TRUE))
+```
+
+## What random structure to set?
+
+the followint is entirelly taken from: Winter (2013)
+
+*There are a few important things to say here: You might ask yourself “Which random slopes should I specify?” … or even “Are random slopes necessary at all?” A lot of people construct random intercept-only models but conceptually, it makes a hella sense to include random slopes most of the time. After all, you can almost always expect that people differ with how they react to an experimental manipulation! And likewise, you can almost always expect that the effect of an experimental manipulation is not going to be the same for all items.*
+
+*Moreover, researchers in ecology (Schielzeth & Forstmeier, 2009), psycholinguistics (Barr, Levy, Scheepers, & Tilly, 2013) and other fields have shown via simulations that mixed models without random slopes are anticonservative or, in other words, they have a relatively high Type I error rate (they tend to find a lot of significant results which are actually due to chance).*
+
+*Barr et al. (2013) recommend that you should “keep it maximal” with respect to your random effects structure, at least for controlled experiments. This means that you include all random slopes that are justified by your experimental design … and you do this for all fixed effects that are important for the overall interpretation of your study.*
+
+*In the model above, our whole study crucially rested on stating something about politeness. We were not interested in gender differences, but they are well worth controlling for. This is why we had random slopes for the effect of attitude (by subjects and item) but not gender. In other words, we only modeled by-subject and by-item variability in how politeness affects pitch.* 
+
+
+
+Setting up the random effects structure can be tricky, but I can offer some recommendations:
+
+1. Start with theory: Consider which variables in your design could reasonably have random effects based on your experimental design and knowledge of the subject matter.
+
+2. Maximal random effects structure: As a starting point, try to include all random effects that are justified by your design. This approach, suggested by Barr et al. (2013), helps to avoid Type I errors.
+
+3. Keep it parsimonious: While a maximal structure is ideal, it may not always converge. If you face convergence issues, simplify the structure step by step.
+
+4. Use model comparison: Compare models with different random effects structures using likelihood ratio tests or information criteria (AIC, BIC).
+
+5. Consider your sample size: The number of levels in your random effects should be sufficient (usually >5-6) to estimate variance components reliably.
+
+6. Check for overfitting: Be cautious of models that perfectly fit the data, as they might be overfit.
+
+7. Use tools like 'keepef' function in R: This can help identify which random effects contribute significantly to the model.
+
+Remember, there's often a balance between a complex, theoretically justified structure and a simpler one that actually converges. It's a bit of an art as well as a science!
+
+Do you have a specific dataset or research question in mind? That might help me offer more tailored advice.
+<https://keithlohse.github.io/mixed_effects_models/lohse_MER_section_03_factorial.html>
+<https://courses.washington.edu/psy524a/_book/linear-mixed-models.html>
+

@@ -1,0 +1,209 @@
+---
+title: "The scrambled experiment (EEG, Maffei)"
+output: 
+  html_document: 
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# library(readr)
+# 
+# file_list=dir("ERPDataSingleTrialforstudents",full.names = TRUE)
+# temp=lapply(file_list,read_table)
+# 
+# str(temp)
+# D=do.call(rbind,temp)
+# 
+# D = D[,c("PO7", "PO8","ID", "Condition")]
+# 
+# ##equivalent to:
+# #library(dplyr)
+# ##select columns by name
+# #D = D %>%  select(PO7, PO8,ID, Condition)
+# 
+# library(tidyr)
+# 
+# # The arguments to gather():
+# # - data: Data object
+# # - key: Name of new key column (made from names of data columns)
+# # - value: Name of new value column
+# # - ...: Names of source columns that contain values
+# # - factor_key: Treat the new key column as a factor (instead of character vector)
+# D <- gather(D, Channel, Mean_Amplitude, PO7:PO8,factor_key=TRUE)
+# 
+# write_csv(D,file = "data_eeg_scrambled.csv")
+
+library(readr)
+D=read.csv("data_eeg_scrambled.csv",stringsAsFactors = TRUE)
+str(D)
+
+```
+
+
+
+# Fit a model
+```{r}
+library(lmerTest)
+contrasts(D$Channel)=contr.sum
+
+
+# Fit the mixed model
+model <- lmer(Mean_Amplitude ~ Condition * Channel + (0+Condition|ID)+(0+Channel|ID), data = D)
+
+# It doesn't converge., try a simpler model:
+model <- lmer(Mean_Amplitude ~ Condition * Channel + (0+Condition|ID), data = D)
+
+
+
+# Model summary
+summary(model)
+
+# ANOVA of the model
+car::Anova(model)
+
+
+# Post-hoc analysis using emmeans
+library(emmeans)
+emmeans_result <- emmeans(model, pairwise ~ Condition | Channel)
+summary(emmeans_result)
+
+```
+
+
+## Plotting tools
+
+for the first model:
+```{r message=FALSE}
+library(effects)
+plot(allEffects(model))
+
+#plot random effects:
+require(lattice)
+#qqmath(ranef(model, condVar=TRUE))
+```
+
+An alternative plotting tool:
+
+```{r message=FALSE}
+library(sjPlot)
+library(ggplot2)
+plot_model(model, type = "pred", terms = c("Condition", "Channel"))+theme_bw()
+```
+
+# A different parametrization
+
+Let's use a different encoding fo `Condition`, it may be more informative...
+
+
+```{r}
+D$Scrambled="N"
+D$Scrambled[grep("Scrambled",D$Condition)]="Y"
+D$Scrambled=factor(D$Scrambled)
+contrasts(D$Scrambled)<- contr.sum
+#   [,1]
+# N    1
+# Y   -1
+
+D$Content="Face"
+D$Content[grep("Cars",D$Condition)]="Car"
+D$Content=factor(D$Content)
+contrasts(D$Content)<- contr.sum
+#      [,1]
+# Car     1
+# Face   -1
+
+# Furthermore, for Channel:
+#      [,1]
+# PO7     1
+# PO8    -1
+
+
+#IMPORTANT: CREATE new vars: two-level factors in +1, -1 contrast variables:
+D$Content_=model.matrix(~1+Content,D)[,2]
+D$Scrambled_=model.matrix(~1+Scrambled,D)[,2]
+D$Channel_=model.matrix(~1+Channel,D)[,2]
+
+# Fit the mixed model
+model <- lmer(Mean_Amplitude ~ Scrambled * Content * Channel +
+                 (1+Scrambled_+Content_+Channel_||ID), data = D)
+
+
+# Model summary
+summary(model)
+
+# ANOVA of the model
+car::Anova(model)
+
+
+# Post-hoc analysis using emmeans
+require(emmeans)
+emmeans_result <- emmeans(model, pairwise ~ Content | Channel*Scrambled)
+summary(emmeans_result)
+
+
+```
+
+
+## Plotting tools
+
+for the first model:
+```{r message=FALSE}
+library(effects)
+plot(allEffects(model))
+
+#plot random effects:
+require(lattice)
+# qqmath(ranef(model, condVar=TRUE))
+```
+
+An alternative plotting tool:
+
+```{r message=FALSE}
+library(sjPlot)
+library(ggplot2)
+plot_model(model, type = "pred", terms = c("Content","Scrambled", "Channel"))+theme_bw()
+```
+
+
+# What random structure to set?
+
+the followint is entirelly taken from: Winter (2013)
+
+*There are a few important things to say here: You might ask yourself “Which random slopes should I specify?” … or even “Are random slopes necessary at all?” A lot of people construct random intercept-only models but conceptually, it makes a hella sense to include random slopes most of the time. After all, you can almost always expect that people differ with how they react to an experimental manipulation! And likewise, you can almost always expect that the effect of an experimental manipulation is not going to be the same for all items.*
+
+*Moreover, researchers in ecology (Schielzeth & Forstmeier, 2009), psycholinguistics (Barr, Levy, Scheepers, & Tilly, 2013) and other fields have shown via simulations that mixed models without random slopes are anticonservative or, in other words, they have a relatively high Type I error rate (they tend to find a lot of significant results which are actually due to chance).*
+
+*Barr et al. (2013) recommend that you should “keep it maximal” with respect to your random effects structure, at least for controlled experiments. This means that you include all random slopes that are justified by your experimental design … and you do this for all fixed effects that are important for the overall interpretation of your study.*
+
+*In the model above, our whole study crucially rested on stating something about politeness. We were not interested in gender differences, but they are well worth controlling for. This is why we had random slopes for the effect of attitude (by subjects and item) but not gender. In other words, we only modeled by-subject and by-item variability in how politeness affects pitch.* 
+
+
+
+Setting up the random effects structure can be very tricky, but some recommendations can be still given:
+
+1. Start with theory: Consider which variables in your design could reasonably have random effects based on your experimental design and knowledge of the subject matter.   
+
+2. Maximal random effects structure: As a starting point, try to include all random effects that are justified by your design. This approach, suggested by Barr et al. (2013), helps to avoid Type I errors.  
+
+3. Keep it parsimonious: While a maximal structure is ideal, it may not always converge. If you face convergence issues, simplify the structure step by step.  
+
+4. Use model comparison: Compare models with different random effects structures using likelihood ratio tests or information criteria (AIC, BIC).  
+
+5. Consider your sample size: The number of levels in your random effects should be sufficient (usually >5-6) to estimate variance components reliably.  
+
+6. Check for overfitting: Be cautious of models that perfectly fit the data, as they might be overfit.  
+
+7. Use tools like 'keepef' function in R: This can help identify which random effects contribute significantly to the model.
+
+Remember, there's often a balance between a complex, theoretically justified structure and a simpler one that actually converges. It's a bit of an art as well as a science!
+
+
+<https://keithlohse.github.io/mixed_effects_models/lohse_MER_section_03_factorial.html>
+<https://courses.washington.edu/psy524a/_book/linear-mixed-models.html>
+

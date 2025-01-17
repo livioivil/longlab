@@ -76,7 +76,22 @@ modc_mcp
 con1 <- contrast(emm, interaction = "pairwise")
 pairs(con1, by = NULL)
 
+
 ```
+
+## Plotting tools
+
+```{r message=FALSE}
+library(sjPlot)
+library(ggplot2)
+#plot_model(mod, type = "pred", terms = c("Group", "Age"))+theme_bw()
+plot_model(mod, type = "pred", terms = c("Age","Group"))+theme_bw()
+
+#plot random effects:
+require(lattice)
+qqmath(ranef(mod, condVar=TRUE))
+```
+
 
 <!-- ```{r} -->
 <!-- library(tidyverse) -->
@@ -90,6 +105,9 @@ pairs(con1, by = NULL)
 <!-- ``` -->
 
 # (Resampling-based) Two-Stage Summary Statistics approach: flip2sss (= Second-level, Group-level Analisys)
+
+Andreella A, Goeman J, Hemerik J, Finos L. Robust Inference for Generalized Linear Mixed Models: a “Two-Stage Summary Statistics” Approach Based on Score Sign Flipping. Psychometrika. Published online 2025:1-42. doi:10.1017/psy.2024.22
+
 
 ```{r}
 library(jointest)
@@ -147,24 +165,7 @@ anova(res)
 (res=flipscores(Slope~1+Group,data=dati1lev))
 summary(res)
 anova(res)
-
 ```
-
-# Comments
-
-Il modello testato: `Age*Group+(1|Subject.ID)` ammette solo intercetta casuale, mentre il coefficiente angolare (cioè l'evoluzione nel tempo) è uguale per tutti i soggetti (dello stesso Group vista l'interazione imposta nella formula). E' una assunzione ragionevole?
-
-Potremmo quindi voler testare un modello più flessibile, con coefficiente angolare specifico per ogni soggetto: `Age*Group+(1+Age|Subject.ID)`
-
-```{r}
-mod=lmer(nWBV ~ Age*Group+(1+Age|Subject.ID),data=dati)
-summary(mod)
-#anova(mod)
-```
-
-Attenzione!!! `optimizer (nloptwrap) convergence code: 0 (OK) boundary (singular) fit: see help('isSingular')` Non siamo autorizzati ad usa questo modello, il controllo della probabilità di falsi positivi (errore di primo tipo) non è garantito!!
-
-L'approcio di permutazione è non parametrico, assume l'effetto casuale anche per il coefficiente angolare dei soggetti e ci garantisce migliori proprietà inferenziali.
 
 # Profiles Clustering
 
